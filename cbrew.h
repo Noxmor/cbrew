@@ -62,6 +62,7 @@ typedef uint8_t CbrewBool;
 #define CBREW_PATH_SEPARATOR_STR "\\"
 #define CBREW_FILENAME_MAX 256
 #define CBREW_FILEPATH_MAX MAX_PATH
+#define CBREW_COMMAND_LENGTH_MAX 8192
 #endif
 
 #define CBREW_SOURCE_FILE "cbrew" CBREW_PATH_SEPARATOR_STR "cbrew.c"
@@ -686,7 +687,7 @@ void cbrew_project_add_link(CbrewProject* project, const char* link)
     
     ++project->links_count;
     project->links = realloc(project->links, project->links_count * sizeof(char*));
-    project->links[project->links_count - 1] = strdup(link);
+    project->links[project->links_count - 1] = cbrew_path(strdup(link));
 }
 
 CbrewBool cbrew_project_file_matches_wildcards(const CbrewProject* project, const char* filepath)
@@ -754,6 +755,13 @@ CbrewBool cbrew_project_build(const CbrewProject* project)
     const clock_t project_start = clock();
 
     CBREW_LOG_TRACE("Building project %s%s%s...", CBREW_CONSOLE_COLOR_PROJECT, project->name, CBREW_CONSOLE_COLOR_TRACE);
+
+    if(project->configs_count == 0)
+    {
+        CBREW_LOG_WARN("Project %s%s %shas no configs!", CBREW_CONSOLE_COLOR_PROJECT, project->name, CBREW_CONSOLE_COLOR_WARN);
+        CBREW_LOG_WARN("Skipping project %s%s%s!", CBREW_CONSOLE_COLOR_PROJECT, project->name, CBREW_CONSOLE_COLOR_WARN);
+        return CBREW_TRUE;
+    }
 
     size_t project_files_count = 0;
     char** project_files = cbrew_project_find_source_files(project, &project_files_count);
@@ -875,7 +883,6 @@ CbrewBool cbrew_project_config_file_is_already_compiled(const CbrewProject* proj
     char obj_filepath[CBREW_FILEPATH_MAX];
     sprintf(obj_filepath, "%s%c%s", config->obj_dir, CBREW_PATH_SEPARATOR, filename);
 
-    const size_t obj_filepath_len = strlen(obj_filepath);
     char* extension = strrchr(obj_filepath, '.');
     if(extension != NULL)
     {
@@ -884,6 +891,7 @@ CbrewBool cbrew_project_config_file_is_already_compiled(const CbrewProject* proj
     }
     else
     {   
+        size_t obj_filepath_len = strlen(obj_filepath);
         obj_filepath[obj_filepath_len] = '.';
         obj_filepath[obj_filepath_len + 1] = 'o';
         obj_filepath[obj_filepath_len + 2] = '\0';
@@ -899,7 +907,7 @@ CbrewBool cbrew_project_config_file_is_already_compiled(const CbrewProject* proj
         return CBREW_FALSE;
 
     char* include_dirs = cbrew_create_include_dirs_str(project->include_dirs, project->include_dirs_count);
-    char dependency_command[strlen(CBREW_COMPILER) + strlen(include_dirs) + strlen(" -MM ") + CBREW_FILEPATH_MAX];
+    char dependency_command[strlen(CBREW_COMPILER) + strlen(" ") + strlen(include_dirs) + strlen(" -MM ") + CBREW_FILEPATH_MAX];
     sprintf(dependency_command, "%s %s-MM %s", CBREW_COMPILER, include_dirs, filepath);
     free(include_dirs);
 
@@ -939,6 +947,7 @@ CbrewBool cbrew_project_config_compile(const CbrewProject* project, const CbrewC
 {
     CBREW_ASSERT(project != NULL);
     CBREW_ASSERT(config != NULL);
+    CBREW_ASSERT(project_files != NULL);
 
     if(!cbrew_dir_exists(config->obj_dir))
         cbrew_dir_create(config->obj_dir);
@@ -950,15 +959,19 @@ CbrewBool cbrew_project_config_compile(const CbrewProject* project, const CbrewC
     char* config_flags = cbrew_create_flags_str(config->flags, config->flags_count);
     char* config_defines = cbrew_create_defines_str(config->defines, config->defines_count);
 
+    CbrewBool result = CBREW_TRUE;
+
     for(size_t i = 0; i < project_files_count; ++i)
     {
+        CBREW_ASSERT(project_files[i] != NULL);
+
         const char* filename = strrchr(project_files[i], CBREW_PATH_SEPARATOR);
         filename = filename == NULL ? project_files[i] : filename + 1;
 
         if(cbrew_project_config_file_is_already_compiled(project, config, project_files[i]))
             continue;
 
-        const size_t filename_len = strlen(filename);
+        size_t filename_len = strlen(filename);
         char obj_file[CBREW_FILENAME_MAX];
         strcpy(obj_file, filename);
         char* extension = strrchr(obj_file, '.');
@@ -974,10 +987,10 @@ CbrewBool cbrew_project_config_compile(const CbrewProject* project, const CbrewC
             obj_file[filename_len + 2] = '\0';
         }
 
-        CbrewBool result = cbrew_command("%s %s%s%s%s%s-c -o \"%s%c%s\" \"%s\"", CBREW_COMPILER, include_dirs, project_flags, config_flags, project_defines, config_defines, config->obj_dir, CBREW_PATH_SEPARATOR, obj_file, project_files[i]);
+        result = cbrew_command("%s %s%s%s%s%s-c -o \"%s%c%s\" \"%s\"", CBREW_COMPILER, include_dirs, project_flags, config_flags, project_defines, config_defines, config->obj_dir, CBREW_PATH_SEPARATOR, obj_file, project_files[i]);
 
         if(!result)
-            return CBREW_FALSE;
+            break;
     }
 
     free(project_flags);
@@ -987,7 +1000,7 @@ CbrewBool cbrew_project_config_compile(const CbrewProject* project, const CbrewC
     free(config_flags);
     free(config_defines);
 
-    return CBREW_TRUE;
+    return result;
 }
 
 CbrewBool cbrew_project_config_compile_static_lib(const CbrewProject* project, const CbrewConfig* config)
@@ -1017,7 +1030,13 @@ CbrewBool cbrew_project_config_compile_dynamic_lib(const CbrewProject* project, 
     if(!cbrew_dir_exists(config->target_dir))
         cbrew_dir_create(config->target_dir);
     
-    CbrewBool result = cbrew_command("%s -shared -o \"%s%c%s.dll\" %s", CBREW_COMPILER, config->target_dir, CBREW_PATH_SEPARATOR, project->name, obj_files);
+    char* project_flags = cbrew_create_flags_str(project->flags, project->flags_count);
+    char* config_flags = cbrew_create_flags_str(config->flags, config->flags_count);
+
+    CbrewBool result = cbrew_command("%s -shared %s%s-o \"%s%c%s.dll\" %s", CBREW_COMPILER, project_flags, config_flags, config->target_dir, CBREW_PATH_SEPARATOR, project->name, obj_files);
+
+    free(project_flags);
+    free(config_flags);
 
     free(obj_files);
 
@@ -1138,7 +1157,7 @@ char* cbrew_config_create_obj_files_str(const CbrewConfig* config)
         return calloc(1, sizeof(char));
     }
                 
-    char* obj_files_buffer = calloc(obj_files_buffer_len, sizeof(char));
+    char* obj_files_buffer = calloc(obj_files_buffer_len + 1, sizeof(char));
 
     for(size_t i = 0; i < obj_files_count; ++i)
     {
@@ -1178,14 +1197,14 @@ char* cbrew_create_flags_str(char** flags, size_t flags_count)
     if(flags == NULL || flags_count == 0)
         return calloc(1, sizeof(char));
     
-    size_t len = 1;
+    size_t len = 0;
     for(size_t i = 0; i < flags_count; ++i)
-        len += strlen(flags[i]) + 1;
+        len += strlen(flags[i]) + strlen(" ");
 
-    char* flags_str = calloc(len, sizeof(char));
+    char* flags_str = calloc(len + 1, sizeof(char));
 
     for(size_t i = 0; i < flags_count; ++i)
-        sprintf(flags_str, "%s ", flags[i]);
+        sprintf(flags_str + strlen(flags_str), "%s ", flags[i]);
 
     return flags_str;
 }
@@ -1195,14 +1214,14 @@ char* cbrew_create_defines_str(char** defines, size_t defines_count)
     if(defines == NULL || defines_count == 0)
         return calloc(1, sizeof(char));
     
-    size_t len = 1;
+    size_t len = 0;
     for(size_t i = 0; i < defines_count; ++i)
-        len += strlen("-D") + strlen(defines[i]) + 1;
+        len += strlen("-D") + strlen(defines[i]) + strlen(" ");
 
-    char* defines_str = calloc(len, sizeof(char));
+    char* defines_str = calloc(len + 1, sizeof(char));
 
     for(size_t i = 0; i < defines_count; ++i)
-        sprintf(defines_str, "-D%s ", defines[i]);
+        sprintf(defines_str + strlen(defines_str), "-D%s ", defines[i]);
 
     return defines_str;
 }
@@ -1212,14 +1231,14 @@ char* cbrew_create_include_dirs_str(char** include_dirs, size_t include_dirs_cou
     if(include_dirs == NULL || include_dirs_count == 0)
         return calloc(1, sizeof(char));
     
-    size_t len = 1;
+    size_t len = 0;
     for(size_t i = 0; i < include_dirs_count; ++i)
-        len += strlen("-I") + strlen(include_dirs[i]) + 1;
+        len += strlen("-I") + strlen(include_dirs[i]) + strlen(" ");
 
-    char* include_dirs_str = calloc(len, sizeof(char));
+    char* include_dirs_str = calloc(len + 1, sizeof(char));
 
     for(size_t i = 0; i < include_dirs_count; ++i)
-        sprintf(include_dirs_str, "-I%s ", include_dirs[i]);
+        sprintf(include_dirs_str + strlen(include_dirs_str), "-I%s ", include_dirs[i]);
 
     return include_dirs_str;
 }
@@ -1229,14 +1248,31 @@ char* cbrew_create_links_str(char** links, size_t links_count)
     if(links == NULL || links_count == 0)
         return calloc(1, sizeof(char));
     
-    size_t len = 1;
+    size_t len = 0;
     for(size_t i = 0; i < links_count; ++i)
-        len += strlen("-l") + strlen(links[i]) + 1;
+        len += strlen("-L. ") + strlen("-l") + strlen(links[i]) + strlen(" ");
 
-    char* links_str = calloc(len, sizeof(char));
+    char* links_str = calloc(len + 1, sizeof(char));
 
+    char link_dir[CBREW_FILEPATH_MAX];
+    char link_name[CBREW_FILENAME_MAX];
     for(size_t i = 0; i < links_count; ++i)
-        sprintf(links_str, "-l%s ", links[i]);
+    {
+        const char* last_slash = strrchr(links[i], CBREW_PATH_SEPARATOR);
+        if(last_slash == NULL)
+        {
+            strcpy(link_dir, ".");
+            strcpy(link_name, links[i]);
+        }
+        else
+        {
+            strcpy(link_dir, links[i]);
+            *strrchr(link_dir, CBREW_PATH_SEPARATOR) = '\0';
+            strcpy(link_name, last_slash + 1);
+        }
+
+        sprintf(links_str + strlen(links_str), "-L%s -l%s ", link_dir, link_name);
+    }
 
     return links_str;
 }
@@ -1276,18 +1312,17 @@ CbrewBool cbrew_file_copy(const char* src_path, const char* dest_path)
 CbrewBool cbrew_command(const char* format, ...)
 {
     CBREW_ASSERT(format != NULL);
-    
+
+    char cmd[CBREW_COMMAND_LENGTH_MAX];
+
     va_list args;
     va_start(args, format);
-    char* cmd = malloc((vsnprintf(NULL, 0, format, args) + 1) * sizeof(char));
     vsprintf(cmd, format, args);
     va_end(args);
 
     CBREW_LOG_CMD(cmd);
 
     CbrewBool result = system(cmd) == EXIT_SUCCESS;
-
-    free(cmd);
 
     return result;
 }
