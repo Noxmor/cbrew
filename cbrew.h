@@ -229,7 +229,8 @@ typedef uint8_t CbrewBool;
             exit(EXIT_FAILURE);\
         }\
         \
-        cbrew_self_destruct();\
+        if(!cbrew_self_destruct())\
+            CBREW_LOG_WARN("Failed to remove old executable!");\
         \
         CBREW_LOG_INFO("Successfully rebuilt");\
         \
@@ -590,8 +591,9 @@ CbrewBool cbrew_dir_create(const char* dir);
 
 /**
 * Self destructs the executable.
+* @return Returns CBREW_TRUE on success, CBREW_FALSE otherwise.
 */
-void cbrew_self_destruct(void);
+CbrewBool cbrew_self_destruct(void);
 
 #ifdef CBREW_IMPLEMENTATION
 
@@ -1664,7 +1666,7 @@ CbrewBool cbrew_dir_create(const char* dir)
     return GetLastError() != ERROR_ALREADY_EXISTS;
 }
 
-void cbrew_self_destruct(void)
+CbrewBool cbrew_self_destruct(void)
 {
     static const char* bat_script_template = 
         ":Repeat\r\n"
@@ -1679,7 +1681,7 @@ void cbrew_self_destruct(void)
     strcat(bat_filepath, "cbrew.bat");
 
     if(!GetCurrentDirectory(CBREW_FILEPATH_MAX, executable_filepath))
-        return;
+        return CBREW_FALSE;
 
     strcat(executable_filepath, CBREW_PATH_SEPARATOR_STR CBREW_OLD_NAME);
 
@@ -1699,6 +1701,8 @@ void cbrew_self_destruct(void)
 
         ShellExecute(NULL, "open", bat_filepath, NULL, NULL, SW_HIDE);
     }
+
+    return CBREW_TRUE;
 }
 
 #elif defined(CBREW_PLATFORM_LINUX)
@@ -1856,7 +1860,7 @@ CbrewBool cbrew_dir_create(const char* dir)
     return errno == EEXIST;
 }
 
-void cbrew_self_destruct(void)
+CbrewBool cbrew_self_destruct(void)
 {
     char executable_filepath[CBREW_FILEPATH_MAX];
 
@@ -1867,7 +1871,8 @@ void cbrew_self_destruct(void)
 
     char cmd[CBREW_COMMAND_LENGTH_MAX];
     sprintf(cmd, "rm -f %s &", executable_filepath);
-    system(cmd);
+
+    return system(cmd) == 0;
 }
 
 #else
