@@ -1535,8 +1535,6 @@ char** cbrew_find_files(const char* dir, size_t* files_count)
 	WIN32_FIND_DATA fd;
 	HANDLE find = FindFirstFile(dir_search_path, &fd);
 
-    const CbrewBool this_dir = strcmp(dir, ".") == 0;
-
 	if (find != INVALID_HANDLE_VALUE)
 	{
 		do
@@ -1546,16 +1544,8 @@ char** cbrew_find_files(const char* dir, size_t* files_count)
 				++files_found;
 				files = realloc(files, files_found * sizeof(char*));
 
-				if(this_dir)
-				{
-					files[files_found - 1] = malloc((strlen(fd.cFileName) + 1) * sizeof(char));
-                	strcpy(files[files_found - 1], fd.cFileName);
-				}
-				else
-				{
-					files[files_found - 1] = malloc((strlen(dir) + 1 + strlen(fd.cFileName) + 1) * sizeof(char));
-                	sprintf(files[files_found - 1], "%s%c%s", dir, CBREW_PATH_SEPARATOR, fd.cFileName);
-				}
+				files[files_found - 1] = malloc((strlen(dir) + 1 + strlen(fd.cFileName) + 1) * sizeof(char));
+                sprintf(files[files_found - 1], "%s%c%s", dir, CBREW_PATH_SEPARATOR, fd.cFileName);
 			}
 		} while (FindNextFile(find, &fd));
 
@@ -1584,9 +1574,6 @@ char** cbrew_find_files_recursive(const char* dir, size_t* files_count)
 	WIN32_FIND_DATA fd;
 	HANDLE find = FindFirstFile(dir_search_path, &fd);
 
-	const CbrewBool this_dir = strcmp(dir, ".") == 0;
-	const char* dir_start = dir[0] == '.' ? dir + 2 : dir;
-
 	if (find != INVALID_HANDLE_VALUE)
 	{
 		do
@@ -1596,16 +1583,8 @@ char** cbrew_find_files_recursive(const char* dir, size_t* files_count)
 				++files_found;
 				files = realloc(files, files_found * sizeof(char*));
 
-				if(this_dir)
-				{
-					files[files_found - 1] = malloc((strlen(fd.cFileName) + 1) * sizeof(char));
-                	strcpy(files[files_found - 1], fd.cFileName);
-				}
-				else
-				{
-					files[files_found - 1] = malloc((strlen(dir_start) + 1 + strlen(fd.cFileName) + 1) * sizeof(char));
-                	sprintf(files[files_found - 1], "%s%c%s", dir_start, CBREW_PATH_SEPARATOR, fd.cFileName);
-				}
+				files[files_found - 1] = malloc((strlen(dir) + 1 + strlen(fd.cFileName) + 1) * sizeof(char));
+                sprintf(files[files_found - 1], "%s%c%s", dir, CBREW_PATH_SEPARATOR, fd.cFileName);
 			}
             else if(strcmp(fd.cFileName, ".") != 0 && strcmp(fd.cFileName, "..") != 0)
             {
