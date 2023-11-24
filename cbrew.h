@@ -80,7 +80,7 @@ typedef uint8_t CbrewBool;
 #define CBREW_COMMAND_LENGTH_MAX 8192
 
 #define CBREW_SOURCE_FILE "cbrew" CBREW_PATH_SEPARATOR_STR "cbrew.c"
-#define CBREW_OLD_NAME "cbrew.old"
+#define CBREW_OLD_NAME "cbrew" CBREW_PATH_SEPARATOR_STR "cbrew.old"
 
 /* Console colors */
 
@@ -207,7 +207,7 @@ typedef uint8_t CbrewBool;
         }\
         \
         char old_name[CBREW_FILEPATH_MAX];\
-        cbrew_executable_filepath(old_name);\
+        cbrew_executable_filepath(old_name, argv[0]);\
         \
         if(!cbrew_first_file_is_older(old_name, CBREW_SOURCE_FILE))\
         {\
@@ -222,7 +222,7 @@ typedef uint8_t CbrewBool;
             exit(EXIT_FAILURE);\
         }\
         \
-        if(!cbrew_command("%s -Wall -Wextra -O3 -o cbrew %s", CBREW_COMPILER, CBREW_SOURCE_FILE))\
+        if(!cbrew_command("%s -Wall -Wextra -O3 -o cbrew%ccbrew %s", CBREW_COMPILER, CBREW_PATH_SEPARATOR, CBREW_SOURCE_FILE))\
         {\
             CBREW_LOG_ERROR("Failed to rebuild!");\
             cbrew_file_rename(CBREW_OLD_NAME, old_name);\
@@ -293,8 +293,10 @@ typedef struct CbrewProject
 
 /**
 * Builds all projects with all configurations that have been registered with cbrew.
+* @param argc argc of the main() function.
+* @param argv argv of the main() function.
 */
-void cbrew_build(void);
+void cbrew_build(int argc, char** argv);
 
 /* Projects */
 
@@ -491,11 +493,10 @@ char* cbrew_create_links_str(char** links, size_t links_count);
 /* IO */
 
 /**
-* Creates a string with the filepath consisting of name and extension of the cbrew executable.
-* This string must be freed by the caller.
+* Copies the filepath inside argv[0] into filepath with the correct extension, if the extension of the executable is not already inside argv[0].
 * @param filepath A string large enough to store the filepath.
 */
-void cbrew_executable_filepath(char* filepath);
+void cbrew_executable_filepath(char* filepath, const char* argv0);
 
 /**
 * Executes a command on the command prompt.
@@ -598,13 +599,17 @@ typedef struct CbrewHandler
 {
     CbrewProject* projects;
     size_t projects_count;
+
+    const char* argv0;
 } CbrewHandler;
 
 static CbrewHandler handler;
 
-void cbrew_build(void)
+void cbrew_build(int argc, char** argv)
 {
     const clock_t start = clock();
+
+    handler.argv0 = argv[0];
 
     CbrewBool success = CBREW_TRUE;
 
@@ -915,7 +920,7 @@ CbrewBool cbrew_project_config_file_is_already_compiled(const CbrewProject* proj
         return CBREW_FALSE;
 
     char executable[CBREW_FILEPATH_MAX];
-    cbrew_executable_filepath(executable);
+    cbrew_executable_filepath(executable, handler.argv0);
 
     if(cbrew_first_file_is_older(obj_filepath, executable))
         return CBREW_FALSE;
@@ -1466,17 +1471,16 @@ CbrewBool cbrew_file_matches_wildcard(const char* filepath, const char* wildcard
 
 #ifdef CBREW_PLATFORM_WINDOWS
 
-void cbrew_executable_filepath(char* filepath)
+void cbrew_executable_filepath(char* filepath, const char* argv0)
 {
     CBREW_ASSERT(filepath != NULL);
-    
-    char executable[CBREW_FILEPATH_MAX];
-    GetModuleFileName(NULL, executable, CBREW_FILEPATH_MAX);
+    CBREW_ASSERT(argv0 != NULL);
 
-    const char* path = strrchr(executable, CBREW_PATH_SEPARATOR);
-    path = path == NULL ? executable : path + 1;
-
-    strcpy(filepath, path);
+    const char* dot = strrchr(argv0, '.');
+    if(dot == NULL)
+        sprintf(filepath, "%s.exe", argv0);
+    else
+        strcpy(filepath, argv0);
 }
 
 CbrewBool cbrew_first_file_is_older(const char* first_file, const char* second_file)
@@ -1674,8 +1678,12 @@ void cbrew_self_destruct(void)
     GetTempPath(CBREW_FILEPATH_MAX, bat_filepath);
     strcat(bat_filepath, "cbrew.bat");
 
-    GetModuleFileName(NULL, executable_filepath, CBREW_FILEPATH_MAX);
-    sprintf(strrchr(executable_filepath, CBREW_PATH_SEPARATOR) + 1, "%s", CBREW_OLD_NAME);
+    if(!GetCurrentDirectory(CBREW_FILEPATH_MAX, executable_filepath))
+        return;
+
+    strcat(executable_filepath, CBREW_PATH_SEPARATOR_STR CBREW_OLD_NAME);
+
+    printf("Filepath: %s\n", executable_filepath);
 
     const HANDLE bat_handle = CreateFile(bat_filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -1695,21 +1703,12 @@ void cbrew_self_destruct(void)
 
 #elif defined(CBREW_PLATFORM_LINUX)
 
-void cbrew_executable_filepath(char* filepath)
+void cbrew_executable_filepath(char* filepath, const char* argv0)
 {
     CBREW_ASSERT(filepath != NULL);
-    
-    char executable[PATH_MAX];
+    CBREW_ASSERT(argv0 != NULL);
 
-    ssize_t len = readlink("/proc/self/exe", executable, sizeof(executable)-1);
-    
-    if (len != -1)
-        executable[len] = '\0';
-
-    const char* path = strrchr(executable, '/');
-    path = path == NULL ? executable : path + 1;
-
-    strcpy(filepath, path);
+    strcpy(filepath, argv0);
 }
 
 CbrewBool cbrew_first_file_is_older(const char* first_file, const char* second_file)
