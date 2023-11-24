@@ -69,12 +69,18 @@ typedef uint8_t CbrewBool;
 #define CBREW_PATH_SEPARATOR_STR "\\"
 #define CBREW_FILENAME_MAX 256
 #define CBREW_FILEPATH_MAX MAX_PATH
+#define CBREW_STATIC_LIB_EXTENSION "lib"
+#define CBREW_DYNAMIC_LIB_EXTENSION "dll"
+#define CBREW_LIB_PREFIX ""
 
 #elif defined(CBREW_PLATFORM_LINUX)
 #define CBREW_PATH_SEPARATOR '/'
 #define CBREW_PATH_SEPARATOR_STR "/"
 #define CBREW_FILENAME_MAX 256
 #define CBREW_FILEPATH_MAX PATH_MAX
+#define CBREW_STATIC_LIB_EXTENSION "a"
+#define CBREW_DYNAMIC_LIB_EXTENSION "so"
+#define CBREW_LIB_PREFIX "lib"
 #endif
 
 #define CBREW_COMMAND_LENGTH_MAX 8192
@@ -1036,7 +1042,7 @@ CbrewBool cbrew_project_config_compile_static_lib(const CbrewProject* project, c
     if(!cbrew_dir_exists(config->target_dir))
         cbrew_dir_create(config->target_dir);
 
-    CbrewBool result = cbrew_command("ar rcs \"%s%c%s.lib\" %s", config->target_dir, CBREW_PATH_SEPARATOR, project->name, obj_files);
+    CbrewBool result = cbrew_command("ar rcs \"%s%c%s%s.%s\" %s", config->target_dir, CBREW_PATH_SEPARATOR, CBREW_LIB_PREFIX, project->name, CBREW_STATIC_LIB_EXTENSION, obj_files);
 
     free(obj_files);
 
@@ -1056,7 +1062,7 @@ CbrewBool cbrew_project_config_compile_dynamic_lib(const CbrewProject* project, 
     char* project_flags = cbrew_create_flags_str(project->flags, project->flags_count);
     char* config_flags = cbrew_create_flags_str(config->flags, config->flags_count);
 
-    CbrewBool result = cbrew_command("%s -shared %s%s-o \"%s%c%s.dll\" %s", CBREW_COMPILER, project_flags, config_flags, config->target_dir, CBREW_PATH_SEPARATOR, project->name, obj_files);
+    CbrewBool result = cbrew_command("%s -shared %s%s-o \"%s%c%s.%s\" %s", CBREW_COMPILER, project_flags, config_flags, config->target_dir, CBREW_PATH_SEPARATOR, project->name, CBREW_DYNAMIC_LIB_EXTENSION, obj_files);
 
     free(project_flags);
     free(config_flags);
