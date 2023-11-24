@@ -609,6 +609,8 @@ static CbrewHandler handler;
 
 void cbrew_build(int argc, char** argv)
 {
+    (void)argc;
+
     const clock_t start = clock();
 
     handler.argv0 = argv[0];
