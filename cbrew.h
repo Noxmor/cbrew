@@ -1862,17 +1862,7 @@ CbrewBool cbrew_dir_create(const char* dir)
 
 CbrewBool cbrew_self_destruct(void)
 {
-    char executable_filepath[CBREW_FILEPATH_MAX];
-
-    ssize_t len = readlink("/proc/self/exe", executable_filepath, sizeof(executable_filepath)-1);
-    if (len != -1) {
-        executable_filepath[len] = '\0';
-    }
-
-    char cmd[CBREW_COMMAND_LENGTH_MAX];
-    sprintf(cmd, "rm -f %s &", executable_filepath);
-
-    return system(cmd) == 0;
+    return unlink(CBREW_OLD_NAME) == 0;
 }
 
 #else
