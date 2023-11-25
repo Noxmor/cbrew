@@ -65,6 +65,7 @@ typedef uint8_t CbrewBool;
 /* Platform dependencies */
 
 #ifdef CBREW_PLATFORM_WINDOWS
+#define CBREW_PLATFORM_NAME "Windows"
 #define CBREW_PATH_SEPARATOR '\\'
 #define CBREW_PATH_SEPARATOR_STR "\\"
 #define CBREW_FILENAME_MAX 256
@@ -74,6 +75,7 @@ typedef uint8_t CbrewBool;
 #define CBREW_LIB_PREFIX ""
 
 #elif defined(CBREW_PLATFORM_LINUX)
+#define CBREW_PLATFORM_NAME "Linux"
 #define CBREW_PATH_SEPARATOR '/'
 #define CBREW_PATH_SEPARATOR_STR "/"
 #define CBREW_FILENAME_MAX 256
