@@ -62,6 +62,14 @@ typedef uint8_t CbrewBool;
 #error "Unknown platform!"
 #endif
 
+/* Architecture detection */
+
+#if defined(__x86_64__) || defined(_M_X64)
+#define CBREW_ARCHITECTURE_NAME "x86_64"
+#else
+#define CBREW_ARCHITECTURE_NAME "Unknown"
+#endif
+
 /* Platform dependencies */
 
 #ifdef CBREW_PLATFORM_WINDOWS
