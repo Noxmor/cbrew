@@ -105,7 +105,7 @@ Under the hood cbrew performs a variety of commands, so you don't have to manual
 Inside `cbrew.c`:
 ```c
 #define CBREW_IMPLEMENTATION
-#include "cbrew.h"
+#include <cbrew/cbrew.h>
 
 int main(void)
 {
@@ -127,7 +127,7 @@ int main(void)
 Inside `cbrew.c`:
 ```c
 #define CBREW_IMPLEMENTATION
-#include "cbrew.h"
+#include <cbrew/cbrew.h>
 
 int main(void)
 {
@@ -149,7 +149,7 @@ int main(void)
 Inside `cbrew.c`:
 ```c
 #define CBREW_IMPLEMENTATION
-#include "cbrew.h"
+#include <cbrew/cbrew.h>
 
 int main(void)
 {
@@ -171,7 +171,7 @@ int main(void)
 Inside `cbrew.c`:
 ```c
 #define CBREW_IMPLEMENTATION
-#include "cbrew.h"
+#include <cbrew/cbrew.h>
 
 void create_foo_project(void)
 {
