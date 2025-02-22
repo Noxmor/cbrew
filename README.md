@@ -75,7 +75,7 @@ Inside `cbrew.c`:
 #define CBREW_IMPLEMENTATION
 #include "cbrew.h"
 
-int main(int argc, char** argv)
+int main(void)
 {
     CbrewProject* project = CBREW_PRJ_NEW("Hello-World", CBREW_PROJECT_TYPE_APP);
 
@@ -97,7 +97,7 @@ Inside `cbrew.c`:
 #define CBREW_IMPLEMENTATION
 #include "cbrew.h"
 
-int main(int argc, char** argv)
+int main(void)
 {
     CbrewProject* static_lib = CBREW_PRJ_NEW("Static-Libary-Name", CBREW_PROJECT_TYPE_STATIC_LIB);
 
@@ -119,7 +119,7 @@ Inside `cbrew.c`:
 #define CBREW_IMPLEMENTATION
 #include "cbrew.h"
 
-int main(int argc, char** argv)
+int main(void)
 {
     CbrewProject* dynamic_lib = CBREW_PRJ_NEW("Dynamic-Libary-Name", CBREW_PROJECT_TYPE_DYNAMIC_LIB);
 
@@ -174,7 +174,7 @@ void create_bar_project(void)
     CBREW_CFG_FLAG(release_config, "-O3");
 }
 
-int main(int argc, char** argv)
+int main(void)
 {
     CBREW_AUTO_REBUILD(argc, argv);
 
