@@ -3,23 +3,53 @@ Everything anyone should ever need to compile a C project should be a C compiler
 
 ***
 
-## Getting Started
-1. Start by cloning this repository with `git clone https://github.com/Noxmor/cbrew` into the common root directory of your project(s).
-2. Create a file named `cbrew.c` inside the `cbrew` folder.
-3. Open `cbrew.c` and start coding and customizing your build tool.
-4. Compile `cbrew.c` into an executable inside your root directory.
-5. Done! If you used the `CBREW_AUTO_REBUILD` macro, cbrew will automatically recompile itself whenever you modify the source code of `cbrew.c`.
+## About
+`cbrew` comes in two components:
+1. The `cbrew` executable
+2. The `cbrew.h` header
+
+***
+
+## Installing
+
+### Linux
+1. Start by cloning this repository with the following command:
+```bash
+git clone https://github.com/Noxmor/cbrew
+```
+2. Run the `install.sh` script.
+3. Done!
+
+***
+
+### Windows
+1. Start by cloning this repository with the following command:
+```bash
+git clone https://github.com/Noxmor/cbrew
+```
+2. Manually compile the cbrew executable. (For references look at the [Linux install script](install.sh))
+3. (Optional) Move the `cbrew` executable and the content of the `include` directory to a desired place, if you plan on deleting the cloned repository afterwards.
+4. Add the path to the `cbrew` executable to your `PATH` environment variable.
+5. Add the path to the `include` directory to your `INCLUDE` environment variable.
+6. Done.
+
+**Note**: `cbrew` does not come with an install script for Windows, since Windows and especially batch scripts are a monumental nightmare, frankly speaking.
+
+***
+
+## Setup cbrew for an existing project
+1. Navigate into the root directory of your project 
+2. Create a file named `cbrew.c`.
+3. Open `cbrew.c` and start coding and customizing. See [Examples](#examples) for more information.
+4. Done! You can now compile your project(s) by just running `cbrew` inside the directory with the `cbrew.c` file.
 
 ***
 
 ## How cbrew works
-With cbrew you can create projects and configurations that can than be automatically compiled by cbrew. Every `project` has a unique name and a type. Every project needs to have at least one `configuration` that tells cbrew how to compile the project. Every `configuration` for a certain project has a unique name and more importantly a `target directory` and an `object directory`. The final product (depending on the type of the project) will be placed inside the `target directory`, while all object files will be placed inside the `object directory`. This is useful for reducing compile time for larger projects, because cbrew will only recompile source files that have no or an outdated object file. If the object file is still up to date, the source file won't be compiled again.
+With `cbrew` you can create projects and configurations that can than be automatically (re-)compiled. Every `project` has a unique name and a type. Every project needs to have at least one `configuration` that tells cbrew how to compile the project. Every `configuration` for a certain project has a unique name and more importantly a `target directory` and an `object directory`. The final product (depending on the type of the project) will be placed inside the `target directory`, while all object files will be placed inside the `object directory`. The `cbrew` executable automatically generates a **local** `cbrew` executable based on the `cbrew.c` file, which will be in charge of actually compiling your project(s). The **local** executable can be found at `./.cbrew/cbrew`, relative to the location of the `cbrew.c` file.
 
 ### Bootstrapping
-Normally, you would need to recompile the cbrew executable every time you make changes to the `cbrew.c` source file. This is tedious work that we want to avoid. Therefore, you should use the `CBREW_AUTO_REBUILD` macro to enable automatic recompilation of the cbrew executable. When using this, you only need to compile cbrew by hand once (bootstrapping). When using this macro, cbrew will check every time it is run if its source code was modified and if so, recompile itself, before starting the actual execution of commands to compile all your projects.
-
-### Compiler detection
-cbrew will detect your C compiler that you used to bootstrap cbrew. cbrew will henceforward use exactly this compiler when executing commands.
+Normally, you would need to recompile your **local** `cbrew` executable every time you make changes to the `cbrew.c` source file. This is tedious work that we want to avoid. Therefore, when you run `cbrew` it will automatically check if your **local** executable is outdated and if so, recompile it before executing it. If `cbrew` can't find an existing executable, it will automatically compile your `cbrew.c` file for the first time before executing it, thus bootstrapping it.
 
 ### How to specify paths correctly
 Whenever you're specifying a filepath e.g. `foo/bar/buzz` **always** use `/` as the path separator character. cbrew will automatically change the `/` character if your platform uses a different path separator.
@@ -69,7 +99,9 @@ Under the hood cbrew performs a variety of commands, so you don't have to manual
 
 ***
 
-## Compiling a simple "Hello World!" program
+## Examples
+
+### Compiling a simple "Hello World!" program
 Inside `cbrew.c`:
 ```c
 #define CBREW_IMPLEMENTATION
@@ -91,7 +123,7 @@ int main(void)
 
 ***
 
-## Compiling a static library
+### Compiling a static library
 Inside `cbrew.c`:
 ```c
 #define CBREW_IMPLEMENTATION
@@ -113,7 +145,7 @@ int main(void)
 
 ***
 
-## Compiling a dynamic library
+### Compiling a dynamic library
 Inside `cbrew.c`:
 ```c
 #define CBREW_IMPLEMENTATION
@@ -135,7 +167,7 @@ int main(void)
 
 ***
 
-## Compiling multiple projects
+### Compiling multiple projects
 Inside `cbrew.c`:
 ```c
 #define CBREW_IMPLEMENTATION
@@ -176,8 +208,6 @@ void create_bar_project(void)
 
 int main(void)
 {
-    CBREW_AUTO_REBUILD(argc, argv);
-
     create_foo_project();
     create_bar_project();
 
