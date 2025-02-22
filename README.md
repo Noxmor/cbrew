@@ -51,6 +51,9 @@ With `cbrew` you can create projects and configurations that can than be automat
 ### Bootstrapping
 Normally, you would need to recompile your **local** `cbrew` executable every time you make changes to the `cbrew.c` source file. This is tedious work that we want to avoid. Therefore, when you run `cbrew` it will automatically check if your **local** executable is outdated and if so, recompile it before executing it. If `cbrew` can't find an existing executable, it will automatically compile your `cbrew.c` file for the first time before executing it, thus bootstrapping it.
 
+### Compiler detection
+`cbrew` will detect your C compiler based on the `CBREW_CC` environment variable. If this variable is not set, `cbrew` will fallback to use `gcc`.
+
 ### How to specify paths correctly
 Whenever you're specifying a filepath e.g. `foo/bar/buzz` **always** use `/` as the path separator character. cbrew will automatically change the `/` character if your platform uses a different path separator.
 
