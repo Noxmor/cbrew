@@ -95,9 +95,6 @@ typedef uint8_t CbrewBool;
 
 #define CBREW_COMMAND_LENGTH_MAX 8192
 
-#define CBREW_SOURCE_FILE "cbrew" CBREW_PATH_SEPARATOR_STR "cbrew.c"
-#define CBREW_OLD_NAME "cbrew" CBREW_PATH_SEPARATOR_STR "cbrew.old"
-
 /* Console colors */
 
 #ifdef CBREW_ENABLE_CONSOLE_COLORS
@@ -207,57 +204,6 @@ typedef uint8_t CbrewBool;
 #define CBREW_CFG_NEW(prj, name, target_dir, obj_dir) cbrew_project_config_create(prj, name, target_dir, obj_dir)
 #define CBREW_CFG_DEFINE(cfg, define) cbrew_config_add_define(cfg, define)
 #define CBREW_CFG_FLAG(cfg, flag) cbrew_config_add_flag(cfg, flag)
-
-/*
-* This macro can be used if you compile CBREW with only one source file - as intended.
-* When used, everytime you run CBREW it will check when you last modified
-* your source file and if you modified it after the CBREW executable
-* was created, than CBREW will automatically rebuild itself.
-*/
-#define CBREW_AUTO_REBUILD(argc, argv)\
-    CBREW_SCOPED_MACRO(\
-        if(!cbrew_file_exists(CBREW_SOURCE_FILE))\
-        {\
-            CBREW_LOG_WARN("%s does not exist!", CBREW_SOURCE_FILE);\
-            break;\
-        }\
-        \
-        char old_name[CBREW_FILEPATH_MAX];\
-        cbrew_executable_filepath(old_name, argv[0]);\
-        \
-        if(!cbrew_first_file_is_older(old_name, CBREW_SOURCE_FILE))\
-        {\
-            break;\
-        }\
-        \
-        CBREW_LOG_TRACE("Rebuilding...");\
-        \
-        if(!cbrew_file_rename(old_name, CBREW_OLD_NAME))\
-        {\
-            CBREW_LOG_ERROR("Failed to rename old executable!");\
-            exit(EXIT_FAILURE);\
-        }\
-        \
-        if(!cbrew_command("%s -Wall -Wextra -O3 -o cbrew%ccbrew %s", CBREW_COMPILER, CBREW_PATH_SEPARATOR, CBREW_SOURCE_FILE))\
-        {\
-            CBREW_LOG_ERROR("Failed to rebuild!");\
-            cbrew_file_rename(CBREW_OLD_NAME, old_name);\
-            exit(EXIT_FAILURE);\
-        }\
-        \
-        if(!cbrew_self_destruct())\
-            CBREW_LOG_WARN("Failed to remove old executable!");\
-        \
-        CBREW_LOG_INFO("Successfully rebuilt");\
-        \
-        if(!cbrew_command(old_name))\
-        {\
-            CBREW_LOG_ERROR("Failed to restart!");\
-            exit(EXIT_FAILURE);\
-        }\
-        \
-        exit(EXIT_SUCCESS);\
-    )
 
 typedef struct CbrewConfig
 {
@@ -605,12 +551,6 @@ CbrewBool cbrew_dir_exists(const char* dir);
 */
 CbrewBool cbrew_dir_create(const char* dir);
 
-/**
-* Self destructs the executable.
-* @return Returns CBREW_TRUE on success, CBREW_FALSE otherwise.
-*/
-CbrewBool cbrew_self_destruct(void);
-
 #ifdef CBREW_IMPLEMENTATION
 
 typedef struct CbrewHandler
@@ -656,7 +596,7 @@ CbrewProject* cbrew_project_create(const char* name, CbrewProjectType type)
 {
     CBREW_ASSERT(name != NULL);
     CBREW_ASSERT(type < CBREW_PROJECT_TYPE_SIZE);
-    
+
     for(size_t i = 0; i < handler.projects_count; ++i)
     {
         if(strcmp(handler.projects[i].name, name) == 0)
@@ -1684,45 +1624,6 @@ CbrewBool cbrew_dir_create(const char* dir)
     return GetLastError() != ERROR_ALREADY_EXISTS;
 }
 
-CbrewBool cbrew_self_destruct(void)
-{
-    static const char* bat_script_template = 
-        ":Repeat\r\n"
-        "del \"%s\"\r\n"
-        "if exist \"%s\" goto Repeat\r\n"
-       "del \"%s\"";
-
-    char executable_filepath[CBREW_FILEPATH_MAX];
-    char bat_filepath[CBREW_FILEPATH_MAX];
-
-    GetTempPath(CBREW_FILEPATH_MAX, bat_filepath);
-    strcat(bat_filepath, "cbrew.bat");
-
-    if(!GetCurrentDirectory(CBREW_FILEPATH_MAX, executable_filepath))
-        return CBREW_FALSE;
-
-    strcat(executable_filepath, CBREW_PATH_SEPARATOR_STR CBREW_OLD_NAME);
-
-    printf("Filepath: %s\n", executable_filepath);
-
-    const HANDLE bat_handle = CreateFile(bat_filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-    if(bat_handle != INVALID_HANDLE_VALUE)
-    {
-        char* bat_script = (char*)alloca(strlen(bat_script_template) + strlen(executable_filepath) * 2 + strlen(bat_filepath) + 20);
-    
-        wsprintf(bat_script, bat_script_template, executable_filepath, executable_filepath, bat_filepath);
-
-        DWORD len;
-        WriteFile(bat_handle, bat_script, strlen(bat_script), &len, NULL);
-        CloseHandle(bat_handle);
-
-        ShellExecute(NULL, "open", bat_filepath, NULL, NULL, SW_HIDE);
-    }
-
-    return CBREW_TRUE;
-}
-
 #elif defined(CBREW_PLATFORM_LINUX)
 
 void cbrew_executable_filepath(char* filepath, const char* argv0)
@@ -1876,11 +1777,6 @@ CbrewBool cbrew_dir_create(const char* dir)
         return CBREW_TRUE;
 
     return errno == EEXIST;
-}
-
-CbrewBool cbrew_self_destruct(void)
-{
-    return unlink(CBREW_OLD_NAME) == 0;
 }
 
 #else
