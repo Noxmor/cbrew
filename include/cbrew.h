@@ -557,8 +557,6 @@ typedef struct CbrewHandler
 {
     CbrewProject* projects;
     size_t projects_count;
-
-    const char* argv0;
 } CbrewHandler;
 
 static CbrewHandler handler;
@@ -568,8 +566,6 @@ void cbrew_build(int argc, char** argv)
     (void)argc;
 
     const clock_t start = clock();
-
-    handler.argv0 = argv[0];
 
     CbrewBool success = CBREW_TRUE;
 
@@ -849,16 +845,16 @@ CbrewBool cbrew_project_build(const CbrewProject* project)
         CBREW_LOG_INFO("Successfully built project %s%s %s(%.0lfms)", CBREW_CONSOLE_COLOR_PROJECT, project->name, CBREW_CONSOLE_COLOR_TIME, project_building_time);
         return CBREW_TRUE;
     }
-    
+
     CBREW_LOG_ERROR("Failed to build project %s%s%s!", CBREW_CONSOLE_COLOR_PROJECT, project->name, CBREW_CONSOLE_COLOR_ERROR);
     return CBREW_FALSE;
 }
 
 CbrewBool cbrew_project_config_file_is_already_compiled(const CbrewProject* project, const CbrewConfig* config, const char* filepath)
-{   
+{
     const char* filename = strrchr(filepath, CBREW_PATH_SEPARATOR);
     filename = filename == NULL ? filepath : filename + 1;
-        
+
     char obj_filepath[CBREW_FILEPATH_MAX];
     sprintf(obj_filepath, "%s%c%s", config->obj_dir, CBREW_PATH_SEPARATOR, filename);
 
@@ -869,7 +865,7 @@ CbrewBool cbrew_project_config_file_is_already_compiled(const CbrewProject* proj
         extension[2] = '\0';
     }
     else
-    {   
+    {
         size_t obj_filepath_len = strlen(obj_filepath);
         obj_filepath[obj_filepath_len] = '.';
         obj_filepath[obj_filepath_len + 1] = 'o';
@@ -877,12 +873,6 @@ CbrewBool cbrew_project_config_file_is_already_compiled(const CbrewProject* proj
     }
 
     if(!cbrew_file_exists(obj_filepath))
-        return CBREW_FALSE;
-
-    char executable[CBREW_FILEPATH_MAX];
-    cbrew_executable_filepath(executable, handler.argv0);
-
-    if(cbrew_first_file_is_older(obj_filepath, executable))
         return CBREW_FALSE;
 
     char* include_dirs = cbrew_create_include_dirs_str(project->include_dirs, project->include_dirs_count);
@@ -1421,7 +1411,7 @@ CbrewBool cbrew_file_matches_wildcard(const char* filepath, const char* wildcard
 
         if(*wc == '\0')
             return strchr(fp, CBREW_PATH_SEPARATOR) == NULL;
-        
+
         for(size_t i = 0; i < strlen(fp); ++i)
         {
             if(cbrew_file_matches_wildcard(fp + i, wc))
@@ -1607,12 +1597,12 @@ CbrewBool cbrew_dir_exists(const char* dir)
 CbrewBool cbrew_dir_create(const char* dir)
 {
     CBREW_ASSERT(dir != NULL);
-    
+
     for(size_t i = 0; i < strlen(dir); ++i)
     {
         if(dir[i] != CBREW_PATH_SEPARATOR)
             continue;
-        
+
         char dir_path[CBREW_FILEPATH_MAX];
         strncpy(dir_path, dir, i);
         dir_path[i] = '\0';
