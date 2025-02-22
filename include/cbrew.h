@@ -756,12 +756,12 @@ CbrewBool cbrew_project_build(const CbrewProject* project)
     {
         CBREW_LOG_WARN("Invalid project type specified for project %s%s%s!", CBREW_CONSOLE_COLOR_PROJECT, project->name, CBREW_CONSOLE_COLOR_WARN);
         CBREW_LOG_WARN("Skipping project %s%s%s!", CBREW_CONSOLE_COLOR_PROJECT, project->name, CBREW_CONSOLE_COLOR_WARN);
-        
+
         for(size_t i = 0; i < project_files_count; ++i)
             free(project_files[i]);
 
         free(project_files);
-        
+
         return CBREW_FALSE;
     }
 
@@ -908,7 +908,7 @@ CbrewBool cbrew_project_config_file_is_already_compiled(const CbrewProject* proj
     while((dependency = strtok(NULL, " ")) != NULL)
     {
         cbrew_path(dependency);
-        
+
         if(cbrew_first_file_is_older(obj_filepath, dependency))
         {
             pclose(command_pipe);
@@ -947,8 +947,11 @@ CbrewBool cbrew_project_config_compile(const CbrewProject* project, const CbrewC
         const char* filename = strrchr(project_files[i], CBREW_PATH_SEPARATOR);
         filename = filename == NULL ? project_files[i] : filename + 1;
 
-        if(cbrew_project_config_file_is_already_compiled(project, config, project_files[i]))
-            continue;
+        // NOTE: This can lead to problems based on the dependencies of the source files
+        // For now we just disable incremental builds (shouldn't be needed anyway...)
+
+        /*if(cbrew_project_config_file_is_already_compiled(project, config, project_files[i]))
+            continue;*/
 
         size_t filename_len = strlen(filename);
         char obj_file[CBREW_FILENAME_MAX];
