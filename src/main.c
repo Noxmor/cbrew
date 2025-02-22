@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     (void)argc;
     (void)argv;
 
-    if (cbrew_first_file_is_older(".cbrew/cbrew", "cbrew.c"))
+    if (!cbrew_file_exists(".cbrew/cbrew") || cbrew_first_file_is_older(".cbrew/cbrew", "cbrew.c"))
     {
         rebuild();
     }
