@@ -256,10 +256,8 @@ typedef struct CbrewProject
 
 /**
 * Builds all projects with all configurations that have been registered with cbrew.
-* @param argc argc of the main() function.
-* @param argv argv of the main() function.
 */
-void cbrew_build(int argc, char** argv);
+void cbrew_build(void);
 
 /* Projects */
 
@@ -561,10 +559,8 @@ typedef struct CbrewHandler
 
 static CbrewHandler handler;
 
-void cbrew_build(int argc, char** argv)
+void cbrew_build(void)
 {
-    (void)argc;
-
     const clock_t start = clock();
 
     CbrewBool success = CBREW_TRUE;
@@ -619,7 +615,7 @@ void cbrew_project_add_files(CbrewProject* project, const char* wildcard)
 {
     CBREW_ASSERT(project != NULL);
     CBREW_ASSERT(wildcard != NULL);
-    
+
     ++project->wildcards_count;
     project->wildcards = realloc(project->wildcards, project->wildcards_count * sizeof(char*));
     project->wildcards[project->wildcards_count - 1] = cbrew_path(strdup(wildcard));
@@ -629,7 +625,7 @@ void cbrew_project_add_flag(CbrewProject* project, const char* flag)
 {
     CBREW_ASSERT(project != NULL);
     CBREW_ASSERT(flag != NULL);
-    
+
     ++project->flags_count;
     project->flags = realloc(project->flags, project->flags_count * sizeof(char*));
     project->flags[project->flags_count - 1] = strdup(flag);
@@ -649,7 +645,7 @@ void cbrew_project_add_include_dir(CbrewProject* project, const char* include_di
 {
     CBREW_ASSERT(project != NULL);
     CBREW_ASSERT(include_dir != NULL);
-    
+
     ++project->include_dirs_count;
     project->include_dirs = realloc(project->include_dirs, project->include_dirs_count * sizeof(char*));
     project->include_dirs[project->include_dirs_count - 1] = cbrew_path(strdup(include_dir));
@@ -659,7 +655,7 @@ void cbrew_project_add_link(CbrewProject* project, const char* link)
 {
     CBREW_ASSERT(project != NULL);
     CBREW_ASSERT(link != NULL);
-    
+
     ++project->links_count;
     project->links = realloc(project->links, project->links_count * sizeof(char*));
     project->links[project->links_count - 1] = cbrew_path(strdup(link));
@@ -696,7 +692,6 @@ char** cbrew_project_find_source_files(const CbrewProject* project, size_t* file
     if(files_count != NULL)
         *files_count = source_files_count;
 
-    
     if(source_files_count == 0)
     {
         for(size_t i = 0; i < files_found_count; ++i)
@@ -1001,7 +996,7 @@ CbrewBool cbrew_project_config_compile_dynamic_lib(const CbrewProject* project, 
 
     if(!cbrew_dir_exists(config->target_dir))
         cbrew_dir_create(config->target_dir);
-    
+
     char* project_flags = cbrew_create_flags_str(project->flags, project->flags_count);
     char* config_flags = cbrew_create_flags_str(config->flags, config->flags_count);
 
@@ -1082,7 +1077,7 @@ void cbrew_config_add_flag(CbrewConfig* config, const char* flag)
 {
     CBREW_ASSERT(config != NULL);
     CBREW_ASSERT(flag != NULL);
-    
+
     ++config->flags_count;
     config->flags = realloc(config->flags, config->flags_count * sizeof(char*));
     config->flags[config->flags_count - 1] = strdup(flag);
@@ -1092,7 +1087,7 @@ void cbrew_config_add_define(CbrewConfig* config, const char* define)
 {
     CBREW_ASSERT(config != NULL);
     CBREW_ASSERT(define != NULL);
-    
+
     ++config->defines_count;
     config->defines = realloc(config->defines, config->defines_count * sizeof(char*));
     config->defines[config->defines_count - 1] = strdup(define);
@@ -1101,7 +1096,7 @@ void cbrew_config_add_define(CbrewConfig* config, const char* define)
 char* cbrew_config_create_obj_files_str(const CbrewConfig* config)
 {
     CBREW_ASSERT(config != NULL);
-    
+
     char obj_file_wildcard[CBREW_FILEPATH_MAX];
     sprintf(obj_file_wildcard, "%s%c*.o", config->obj_dir, CBREW_PATH_SEPARATOR);
 
@@ -1128,7 +1123,7 @@ char* cbrew_config_create_obj_files_str(const CbrewConfig* config)
 
         return calloc(1, sizeof(char));
     }
-                
+
     char* obj_files_buffer = calloc(obj_files_buffer_len + 1, sizeof(char));
 
     for(size_t i = 0; i < obj_files_count; ++i)
@@ -1154,7 +1149,7 @@ char* cbrew_config_create_obj_files_str(const CbrewConfig* config)
 char* cbrew_path(char* path)
 {
     CBREW_ASSERT(path != NULL);
-    
+
     for(size_t i = 0; i < strlen(path); ++i)
     {
         if(path[i] == '/')
@@ -1168,7 +1163,7 @@ char* cbrew_create_flags_str(char** flags, size_t flags_count)
 {
     if(flags == NULL || flags_count == 0)
         return calloc(1, sizeof(char));
-    
+
     size_t len = 0;
     for(size_t i = 0; i < flags_count; ++i)
         len += strlen(flags[i]) + strlen(" ");
@@ -1185,7 +1180,7 @@ char* cbrew_create_defines_str(char** defines, size_t defines_count)
 {
     if(defines == NULL || defines_count == 0)
         return calloc(1, sizeof(char));
-    
+
     size_t len = 0;
     for(size_t i = 0; i < defines_count; ++i)
         len += strlen("-D") + strlen(defines[i]) + strlen(" ");
@@ -1202,7 +1197,7 @@ char* cbrew_create_include_dirs_str(char** include_dirs, size_t include_dirs_cou
 {
     if(include_dirs == NULL || include_dirs_count == 0)
         return calloc(1, sizeof(char));
-    
+
     size_t len = 0;
     for(size_t i = 0; i < include_dirs_count; ++i)
         len += strlen("-I") + strlen(include_dirs[i]) + strlen(" ");
@@ -1219,7 +1214,7 @@ char* cbrew_create_links_str(char** links, size_t links_count)
 {
     if(links == NULL || links_count == 0)
         return calloc(1, sizeof(char));
-    
+
     size_t len = 0;
     for(size_t i = 0; i < links_count; ++i)
         len += strlen("-L. ") + strlen("-l") + strlen(links[i]) + strlen(" ");
@@ -1252,12 +1247,12 @@ char* cbrew_create_links_str(char** links, size_t links_count)
 CbrewBool cbrew_file_copy(const char* src_path, const char* dest_path)
 {
     FILE* src = fopen(src_path, "rb");
-    
+
     if(src == NULL)
         return CBREW_FALSE;
 
     FILE* dest = fopen(dest_path, "wb");
-    
+
     if(dest == NULL)
     {
         fclose(src);
@@ -1268,7 +1263,7 @@ CbrewBool cbrew_file_copy(const char* src_path, const char* dest_path)
     while(!feof(src))
     {
         size_t bytes = fread(buffer, sizeof(char), sizeof(buffer), src);
-        
+
         if(bytes > 0)
             fwrite(buffer, sizeof(char), bytes, dest);
     }
@@ -1302,9 +1297,9 @@ CbrewBool cbrew_command(const char* format, ...)
 CbrewBool cbrew_file_exists(const char* file)
 {
     CBREW_ASSERT(file != NULL);
-    
+
     FILE* f = fopen(file, "r");
-    
+
     if(f == NULL)
         return CBREW_FALSE;
 
@@ -1316,7 +1311,7 @@ CbrewBool cbrew_file_exists(const char* file)
 CbrewBool cbrew_file_delete(const char* file)
 {
     CBREW_ASSERT(file != NULL);
-    
+
     return remove(file) == 0;
 }
 
@@ -1395,7 +1390,7 @@ CbrewBool cbrew_file_matches_wildcard(const char* filepath, const char* wildcard
 
         if(*wc == '\0')
             return CBREW_TRUE;
-        
+
         for(size_t i = 0; i < strlen(fp); ++i)
         {
             if(cbrew_file_matches_wildcard(fp + i, wc))
@@ -1478,7 +1473,7 @@ CbrewBool cbrew_file_rename(const char* old_name, const char* new_name)
 {
     CBREW_ASSERT(old_name != NULL);
     CBREW_ASSERT(new_name != NULL);
-    
+
     char old_name_path[CBREW_FILEPATH_MAX];
     cbrew_path(strcpy(old_name_path, old_name));
 
@@ -1495,7 +1490,7 @@ char** cbrew_find_files(const char* dir, size_t* files_count)
     CBREW_ASSERT(dir != NULL);
 
     char** files = NULL;
-	
+
 	size_t files_found = 0;
 
     char dir_search_path[CBREW_FILEPATH_MAX];
@@ -1532,9 +1527,9 @@ char** cbrew_find_files(const char* dir, size_t* files_count)
 char** cbrew_find_files_recursive(const char* dir, size_t* files_count)
 {
     CBREW_ASSERT(dir != NULL);
-    
+
     char** files = NULL;
-	
+
 	size_t files_found = 0;
 
     char dir_search_path[CBREW_FILEPATH_MAX];
@@ -1752,13 +1747,13 @@ CbrewBool cbrew_dir_exists(const char* dir)
 CbrewBool cbrew_dir_create(const char* dir)
 {
     CBREW_ASSERT(dir != NULL);
-    
+
     char dir_path[CBREW_FILEPATH_MAX];
     for(size_t i = 0; i < strlen(dir); ++i)
     {
         if(dir[i] != CBREW_PATH_SEPARATOR)
             continue;
-        
+
         strncpy(dir_path, dir, i);
         dir_path[i] = '\0';
 
