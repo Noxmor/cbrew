@@ -101,7 +101,7 @@ int main(void)
 {
     CbrewProject* static_lib = CBREW_PRJ_NEW("Static-Libary-Name", CBREW_PROJECT_TYPE_STATIC_LIB);
 
-    CBREW_PRJ_FILES(project, "./my_lib/**.c");
+    CBREW_PRJ_FILES(static_lib, "./my_lib/**.c");
 
     CbrewConfig* debug_config = CBREW_CFG_NEW(static_lib, "Debug", "bin/Static-Libary-Name-Debug", "bin-int/Static-Libary-Name-Debug");
 
@@ -123,7 +123,7 @@ int main(void)
 {
     CbrewProject* dynamic_lib = CBREW_PRJ_NEW("Dynamic-Libary-Name", CBREW_PROJECT_TYPE_DYNAMIC_LIB);
 
-    CBREW_PRJ_FILES(project, "./my_lib/**.c");
+    CBREW_PRJ_FILES(dynamic_lib, "./my_lib/**.c");
 
     CbrewConfig* debug_config = CBREW_CFG_NEW(dynamic_lib, "Debug", "bin/Dynamic-Libary-Name-Debug", "bin-int/Dynamic-Libary-Name-Debug");
 
