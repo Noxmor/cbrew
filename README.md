@@ -45,6 +45,15 @@ git clone https://github.com/Noxmor/cbrew
 
 ***
 
+## Configuration for .gitignore
+If you use `cbrew` in a git project, you should add the following to your `.gitignore`:
+```bash
+.cbrew/
+```
+**Note**: Ideally, you would want to ignore your `target directory` and `object directory` as well. However, these are defined inside your `cbrew.c` file, so it's up to you to add the correct paths in your `.gitignore`.
+
+***
+
 ## How cbrew works
 With `cbrew` you can create projects and configurations that can than be automatically (re-)compiled. Every `project` has a unique name and a type. Every project needs to have at least one `configuration` that tells cbrew how to compile the project. Every `configuration` for a certain project has a unique name and more importantly a `target directory` and an `object directory`. The final product (depending on the type of the project) will be placed inside the `target directory`, while all object files will be placed inside the `object directory`. The `cbrew` executable automatically generates a **local** `cbrew` executable based on the `cbrew.c` file, which will be in charge of actually compiling your project(s). The **local** executable can be found at `./.cbrew/cbrew`, relative to the location of the `cbrew.c` file.
 
