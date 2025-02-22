@@ -77,15 +77,15 @@ Inside `cbrew.c`:
 
 int main(int argc, char** argv)
 {
-  CbrewProject* project = CBREW_PRJ_NEW("Hello-World", CBREW_PROJECT_TYPE_APP);
+    CbrewProject* project = CBREW_PRJ_NEW("Hello-World", CBREW_PROJECT_TYPE_APP);
 
-  CBREW_PRJ_FILES(project, "./hello_world.c");
+    CBREW_PRJ_FILES(project, "./hello_world.c");
 
-  CbrewConfig* debug_config = CBREW_CFG_NEW(project, "Debug", "bin/Hello-World-Debug", "bin-int/Hello-World-Debug");
+    CbrewConfig* debug_config = CBREW_CFG_NEW(project, "Debug", "bin/Hello-World-Debug", "bin-int/Hello-World-Debug");
 
-  cbrew_build();
+    cbrew_build();
 
-  return 0;
+    return 0;
 }
 ```
 
@@ -99,15 +99,15 @@ Inside `cbrew.c`:
 
 int main(int argc, char** argv)
 {
-  CbrewProject* static_lib = CBREW_PRJ_NEW("Static-Libary-Name", CBREW_PROJECT_TYPE_STATIC_LIB);
+    CbrewProject* static_lib = CBREW_PRJ_NEW("Static-Libary-Name", CBREW_PROJECT_TYPE_STATIC_LIB);
 
-  CBREW_PRJ_FILES(project, "./my_lib/**.c");
+    CBREW_PRJ_FILES(project, "./my_lib/**.c");
 
-  CbrewConfig* debug_config = CBREW_CFG_NEW(static_lib, "Debug", "bin/Static-Libary-Name-Debug", "bin-int/Static-Libary-Name-Debug");
+    CbrewConfig* debug_config = CBREW_CFG_NEW(static_lib, "Debug", "bin/Static-Libary-Name-Debug", "bin-int/Static-Libary-Name-Debug");
 
-  cbrew_build();
+    cbrew_build();
 
-  return 0;
+    return 0;
 }
 ```
 
@@ -121,15 +121,15 @@ Inside `cbrew.c`:
 
 int main(int argc, char** argv)
 {
-  CbrewProject* dynamic_lib = CBREW_PRJ_NEW("Dynamic-Libary-Name", CBREW_PROJECT_TYPE_DYNAMIC_LIB);
+    CbrewProject* dynamic_lib = CBREW_PRJ_NEW("Dynamic-Libary-Name", CBREW_PROJECT_TYPE_DYNAMIC_LIB);
 
-  CBREW_PRJ_FILES(project, "./my_lib/**.c");
+    CBREW_PRJ_FILES(project, "./my_lib/**.c");
 
-  CbrewConfig* debug_config = CBREW_CFG_NEW(dynamic_lib, "Debug", "bin/Dynamic-Libary-Name-Debug", "bin-int/Dynamic-Libary-Name-Debug");
+    CbrewConfig* debug_config = CBREW_CFG_NEW(dynamic_lib, "Debug", "bin/Dynamic-Libary-Name-Debug", "bin-int/Dynamic-Libary-Name-Debug");
 
-  cbrew_build();
+    cbrew_build();
 
-  return 0;
+    return 0;
 }
 ```
 
@@ -143,46 +143,46 @@ Inside `cbrew.c`:
 
 void create_foo_project(void)
 {
-  CbrewProject* project = CBREW_PRJ_NEW("Foo", CBREW_PROJECT_TYPE_STATIC_LIB);
-  CBREW_PRJ_FILES(project, "./foo/**.c");
-  CBREW_PRJ_INCLUDE_DIR(project, "foo");
-  CBREW_PRJ_FLAG(project, "-Wall");
-  CBREW_PRJ_FLAG(project, "-Wextra");
+    CbrewProject* project = CBREW_PRJ_NEW("Foo", CBREW_PROJECT_TYPE_STATIC_LIB);
+    CBREW_PRJ_FILES(project, "./foo/**.c");
+    CBREW_PRJ_INCLUDE_DIR(project, "foo");
+    CBREW_PRJ_FLAG(project, "-Wall");
+    CBREW_PRJ_FLAG(project, "-Wextra");
 
-  CbrewConfig* debug_config = CBREW_CFG_NEW(project, "Debug", "bin/Foo-Debug", "bin-int/Foo-Debug");
-  CBREW_CFG_DEFINE(debug_config, "FOO_DEBUG");
+    CbrewConfig* debug_config = CBREW_CFG_NEW(project, "Debug", "bin/Foo-Debug", "bin-int/Foo-Debug");
+    CBREW_CFG_DEFINE(debug_config, "FOO_DEBUG");
 
-  CbrewConfig* release_config = CBREW_CFG_NEW(project, "Release", "bin/Foo-Release", "bin-int/Foo-Release");
-  CBREW_CFG_DEFINE(release_config, "FOO_RELEASE");
-  CBREW_CFG_FLAG(release_config, "-O3");
+    CbrewConfig* release_config = CBREW_CFG_NEW(project, "Release", "bin/Foo-Release", "bin-int/Foo-Release");
+    CBREW_CFG_DEFINE(release_config, "FOO_RELEASE");
+    CBREW_CFG_FLAG(release_config, "-O3");
 }
 
 void create_bar_project(void)
 {
-  CbrewProject* project = CBREW_PRJ_NEW("Bar", CBREW_PROJECT_TYPE_APP);
-  CBREW_PRJ_FILES(project, "./bar/**.c");
-  CBREW_PRJ_INCLUDE_DIR(project, "bar");
-  CBREW_PRJ_FLAG(project, "-Wall");
-  CBREW_PRJ_FLAG(project, "-Wextra");
-  CBREW_PRJ_LINK(project, "Foo.lib");
+    CbrewProject* project = CBREW_PRJ_NEW("Bar", CBREW_PROJECT_TYPE_APP);
+    CBREW_PRJ_FILES(project, "./bar/**.c");
+    CBREW_PRJ_INCLUDE_DIR(project, "bar");
+    CBREW_PRJ_FLAG(project, "-Wall");
+    CBREW_PRJ_FLAG(project, "-Wextra");
+    CBREW_PRJ_LINK(project, "Foo.lib");
 
-  CbrewConfig* debug_config = CBREW_CFG_NEW(project, "Debug", "bin/Bar-Debug", "bin-int/Bar-Debug");
-  CBREW_CFG_DEFINE(debug_config, "BAR_DEBUG");
+    CbrewConfig* debug_config = CBREW_CFG_NEW(project, "Debug", "bin/Bar-Debug", "bin-int/Bar-Debug");
+    CBREW_CFG_DEFINE(debug_config, "BAR_DEBUG");
 
-  CbrewConfig* release_config = CBREW_CFG_NEW(project, "Release", "bin/Bar-Release", "bin-int/Bar-Release");
-  CBREW_CFG_DEFINE(release_config, "BAR_RELEASE");
-  CBREW_CFG_FLAG(release_config, "-O3");
+    CbrewConfig* release_config = CBREW_CFG_NEW(project, "Release", "bin/Bar-Release", "bin-int/Bar-Release");
+    CBREW_CFG_DEFINE(release_config, "BAR_RELEASE");
+    CBREW_CFG_FLAG(release_config, "-O3");
 }
 
 int main(int argc, char** argv)
 {
-  CBREW_AUTO_REBUILD(argc, argv);
+    CBREW_AUTO_REBUILD(argc, argv);
 
-  create_foo_project();
-  create_bar_project();
+    create_foo_project();
+    create_bar_project();
 
-  cbrew_build();
+    cbrew_build();
 
-  return 0;
+    return 0;
 }
 ```
