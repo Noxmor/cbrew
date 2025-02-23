@@ -33,5 +33,5 @@ int main(int argc, char** argv)
         rebuild();
     }
 
-    return cbrew_command(".cbrew/cbrew") == 0;
+    return cbrew_command(".cbrew" CBREW_PATH_SEPARATOR_STR "cbrew") == 0;
 }
