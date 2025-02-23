@@ -27,13 +27,10 @@ git clone https://github.com/Noxmor/cbrew
 ```bash
 git clone https://github.com/Noxmor/cbrew
 ```
-2. Manually compile the cbrew executable. (For references look at the [Linux install script](install.sh))
-3. (Optional) Move the `cbrew` executable and the content of the `include` directory to a desired place, if you plan on deleting the cloned repository afterwards.
-4. Add the path to the `cbrew` executable to your `PATH` environment variable.
-5. Add the path to the `include` directory to your `INCLUDE` environment variable.
-6. Done.
-
-**Note**: `cbrew` does not come with an install script for Windows, since Windows and especially batch scripts are a monumental nightmare, frankly speaking.
+2. Run the `install.bat` script.
+3. Update your `PATH` environment variable to include `C:\cbrew\bin`.
+4. Update your compiler's include path environment variable (e.g. `C_INCLUDE_PATH` for `gcc`) to include `C:\cbrew\include`.
+5. Done.
 
 ***
 
