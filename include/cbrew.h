@@ -171,8 +171,8 @@ typedef uint8_t CbrewBool;
 
 /* Logging */
 
-#define CBREW_LOG_ERROR(format, ...) CBREW_SCOPED_MACRO(printf("%s[ERROR]: ", CBREW_CONSOLE_COLOR_ERROR); fprintf(stderr, format, ##__VA_ARGS__); fprintf(stderr, "%s\n", CBREW_CONSOLE_COLOR_RESET);)
-#define CBREW_LOG_WARN(format, ...) CBREW_SCOPED_MACRO(printf("%s[WARN]: ", CBREW_CONSOLE_COLOR_WARN); fprintf(stderr, format, ##__VA_ARGS__); fprintf(stderr, "%s\n", CBREW_CONSOLE_COLOR_RESET);)
+#define CBREW_LOG_ERROR(format, ...) CBREW_SCOPED_MACRO(fprintf(stderr, "%s[ERROR]: ", CBREW_CONSOLE_COLOR_ERROR); fprintf(stderr, format, ##__VA_ARGS__); fprintf(stderr, "%s\n", CBREW_CONSOLE_COLOR_RESET);)
+#define CBREW_LOG_WARN(format, ...) CBREW_SCOPED_MACRO(fprintf(stderr, "%s[WARN]: ", CBREW_CONSOLE_COLOR_WARN); fprintf(stderr, format, ##__VA_ARGS__); fprintf(stderr, "%s\n", CBREW_CONSOLE_COLOR_RESET);)
 #define CBREW_LOG_INFO(format, ...) CBREW_SCOPED_MACRO(printf("%s[INFO]: ", CBREW_CONSOLE_COLOR_INFO); printf(format, ##__VA_ARGS__); printf("%s\n", CBREW_CONSOLE_COLOR_RESET);)
 #define CBREW_LOG_TRACE(format, ...) CBREW_SCOPED_MACRO(printf("%s[TRACE]: ", CBREW_CONSOLE_COLOR_TRACE); printf(format, ##__VA_ARGS__); printf("%s\n", CBREW_CONSOLE_COLOR_RESET);)
 
