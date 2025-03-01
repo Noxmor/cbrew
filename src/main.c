@@ -23,15 +23,57 @@ static void rebuild(void)
     }
 }
 
-int main(int argc, char** argv)
+static void init(void)
 {
-    (void)argc;
-    (void)argv;
-
-    if (!cbrew_file_exists(".cbrew/cbrew") || cbrew_first_file_is_older(".cbrew/cbrew", "cbrew.c"))
+    if (cbrew_file_exists("cbrew.c"))
     {
-        rebuild();
+        CBREW_LOG_ERROR("cbrew has already been initialized!");
+
+        return;
     }
 
-    return cbrew_command(".cbrew" CBREW_PATH_SEPARATOR_STR "cbrew") == 0;
+    static const char* cbrew_preset =
+        "#define CBREW_IMPLEMENTATION\n"
+        "#include <cbrew/cbrew.h>\n\n"
+        "int main(void)\n"
+        "{\n"
+        "    CbrewProject* project = CBREW_PRJ_NEW(\"Hello-World\", CBREW_PROJECT_TYPE_APP);\n\n"
+        "    CBREW_PRJ_FILES(project, \"./hello_world.c\");\n\n"
+        "    CbrewConfig* debug_config = CBREW_CFG_NEW(project, \"Debug\", \"bin/Hello-World-Debug\", \"bin-int/Hello-World-Debug\");\n\n"
+        "    cbrew_build();\n"
+        "}";
+
+    FILE* f = fopen("cbrew.c", "w");
+    if (f == NULL)
+    {
+        return;
+    }
+
+    fwrite(cbrew_preset, sizeof(char), strlen(cbrew_preset), f);
+    fclose(f);
+}
+
+int main(int argc, char** argv)
+{
+    if (argc == 1)
+    {
+        if (!cbrew_file_exists(".cbrew/cbrew") || cbrew_first_file_is_older(".cbrew/cbrew", "cbrew.c"))
+        {
+            rebuild();
+        }
+
+        return cbrew_command(".cbrew" CBREW_PATH_SEPARATOR_STR "cbrew") == 0;
+    }
+
+    if (strcmp(argv[1], "init") == 0)
+    {
+        init();
+    }
+    else
+    {
+        CBREW_LOG_ERROR("Invalid subcommand!");
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
