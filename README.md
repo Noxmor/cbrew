@@ -47,7 +47,8 @@ If you use `cbrew` in a git project, you should add the following to your `.giti
 ```bash
 .cbrew/
 ```
-**Note**: Ideally, you would want to ignore your `target directory` and `object directory` as well. However, these are defined inside your `cbrew.c` file, so it's up to you to add the correct paths in your `.gitignore`.
+> [!NOTE]
+Ideally, you would want to ignore your `target directory` and `object directory` as well. However, these are defined inside your `cbrew.c` file, so it's up to you to add the correct paths in your `.gitignore`.
 
 ***
 
