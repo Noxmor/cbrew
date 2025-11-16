@@ -1,6 +1,34 @@
 #define CBREW_IMPLEMENTATION
 #include "cbrew.h"
 
+static void help_callback(void);
+
+static void version_callback(void);
+
+static void init(int argc, char** argv);
+
+#define CLAPX_FLAGS \
+    CLAPX_BOOL_FLAG(help, "help", 'h', "Show this help message and exit.", help_callback) \
+    CLAPX_BOOL_FLAG(version, "version", 'v', "Show version information and exit.", version_callback)
+
+#define CLAPX_SUBCOMMANDS \
+    CLAPX_SUBCOMMAND(init, "init", "Initializes cbrew.", init)
+
+#define CLAPX_IMPLEMENTATION
+#include <clapx/clapx.h>
+
+static void help_callback(void)
+{
+    clapx_print_usage_str("cbrew");
+    exit(EXIT_SUCCESS);
+}
+
+static void version_callback(void)
+{
+    printf("cbrew version %s\n", CBREW_VERSION_STRING);
+    exit(EXIT_SUCCESS);
+}
+
 static void rebuild(void)
 {
     if (!cbrew_dir_exists(".cbrew"))
@@ -23,14 +51,19 @@ static void rebuild(void)
     }
 }
 
-static void init(void)
+static void init(int argc, char** argv)
 {
+    (void)argc;
+    (void)argv;
+
     if (cbrew_file_exists("cbrew.c"))
     {
         CBREW_LOG_ERROR("cbrew has already been initialized!");
 
         return;
     }
+
+    printf("Initializing cbrew...\n");
 
     static const char* cbrew_preset =
         "#define CBREW_IMPLEMENTATION\n"
@@ -49,12 +82,25 @@ static void init(void)
         return;
     }
 
-    fwrite(cbrew_preset, sizeof(char), strlen(cbrew_preset), f);
-    fclose(f);
+    if (fwrite(cbrew_preset, sizeof(char), strlen(cbrew_preset), f) != strlen(cbrew_preset)
+        || fclose(f))
+    {
+        perror("Error initializing cbrew");
+    }
+    else
+    {
+        printf("Successfully initialized cbrew\n");
+    }
 }
 
 int main(int argc, char** argv)
 {
+    if (clapx_parse_args(argc, argv) != CLAPX_SUCCESS)
+    {
+        clapx_print_usage_str(argv[0]);
+        return EXIT_FAILURE;
+    }
+
     if (argc == 1)
     {
         if (!cbrew_file_exists(".cbrew/cbrew") || cbrew_first_file_is_older(".cbrew/cbrew", "cbrew.c"))
@@ -63,16 +109,6 @@ int main(int argc, char** argv)
         }
 
         return cbrew_command(".cbrew" CBREW_PATH_SEPARATOR_STR "cbrew") == 0;
-    }
-
-    if (strcmp(argv[1], "init") == 0)
-    {
-        init();
-    }
-    else
-    {
-        CBREW_LOG_ERROR("Invalid subcommand!");
-        return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
